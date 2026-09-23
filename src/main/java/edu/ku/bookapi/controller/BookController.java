@@ -1,6 +1,6 @@
 package edu.ku.bookapi.controller;
 
-import edu.ku.bookapi.model.Books;
+import edu.ku.bookapi.model.Book;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,55 +12,102 @@ import java.util.List;
 @RequestMapping("/api/v1/books")
 public class BookController {
 
-    private final List<Books> books = new ArrayList<>(List.of(
-            new Books(1L, "Clean Code", "Robert C. Martin",
+    private Long nextId = 6L;
+
+    private final List<Book> books = new ArrayList<>(List.of(
+            new Book(1L, "Clean Code", "Robert C. Martin",
                     "9780132350884", 2008, "Software Engineering"),
 
-            new Books(2L, "Effective Java", "Joshua Bloch",
+            new Book(2L, "Effective Java", "Joshua Bloch",
                     "9780134685991", 2018, "Java"),
 
-            new Books(3L, "Designing Data-Intensive Applications",
+            new Book(3L, "Designing Data-Intensive Applications",
                     "Martin Kleppmann", "9781449373320", 2017,
                     "Distributed Systems"),
 
-            new Books(4L, "Spring in Action", "Craig Walls",
+            new Book(4L, "Spring in Action", "Craig Walls",
                     "9781617297571", 2022, "Spring"),
 
-            new Books(5L, "Computer Networks", "Andrew S. Tanenbaum",
+            new Book(5L, "Computer Networks", "Andrew S. Tanenbaum",
                     "9780132126953", 2010, "Networking")
     ));
 
-    // GET all books
-    @GetMapping
-    public List<Books> getAllBooks() {
-        return books;
-    }
-
-    // GET book by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Books> getBookById(@PathVariable Long id) {
-
-        return books.stream()
-                .filter(book -> book.getId().equals(id))
-                .findFirst()
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    // POST new book
+    // POST - Add book
     @PostMapping
-    public ResponseEntity<Books> addBook(@RequestBody Books book) {
+    public ResponseEntity<Book> addBook(@RequestBody Book book) {
 
-        long nextId = books.stream()
-                .mapToLong(Books::getId)
-                .max()
-                .orElse(0L) + 1;
+        book.setId(nextId++);
 
-        book.setId(nextId);
         books.add(book);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(book);
+    }
+
+    // GET - Get all books
+    @GetMapping
+    public List<Book> getAllBooks() {
+        return books;
+    }
+    // GET book by ID
+    @GetMapping("/{bookId}")
+    public ResponseEntity<Book> getBookById(@PathVariable Long bookId) {
+
+        for (Book book : books) {
+
+            if (book.getId().equals(bookId)) {
+                return ResponseEntity.ok(book);
+            }
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+    // PUT - Update book
+    @PutMapping("/{bookId}")
+    public ResponseEntity<Book> updateBook(
+            @PathVariable Long bookId,
+            @RequestBody Book input
+    ) {
+
+        for (int i = 0; i < books.size(); i++) {
+
+            Book book = books.get(i);
+
+            if (book.getId().equals(bookId)) {
+
+                Book updatedBook = new Book(
+                        book.getId(),
+                        input.getTitle(),
+                        input.getAuthor(),
+                        input.getIsbn(),
+                        input.getPublishedYear(),
+                        input.getCategory()
+                );
+
+                books.set(i, updatedBook);
+
+                return ResponseEntity.ok(updatedBook);
+            }
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    // DELETE - Delete book
+    @DeleteMapping("/{bookId}")
+    public ResponseEntity<Void> deleteBook(
+            @PathVariable Long bookId
+    ) {
+
+        boolean removed = books.removeIf(
+                book -> book.getId().equals(bookId)
+        );
+
+        if (removed) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.notFound().build();
     }
 }

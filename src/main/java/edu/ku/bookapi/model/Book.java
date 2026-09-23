@@ -1,6 +1,6 @@
 package edu.ku.bookapi.model;
 
-public class Books {
+public class Book {
 
     private Long id;
     private String title;
@@ -9,11 +9,11 @@ public class Books {
     private int publishedYear;
     private String category;
 
-    public Books() {
+    public Book() {
     }
 
-    public Books(Long id, String title, String author, String isbn,
-                 int publishedYear, String category) {
+    public Book(Long id, String title, String author, String isbn,
+                int publishedYear, String category) {
         this.id = id;
         this.title = title;
         this.author = author;
